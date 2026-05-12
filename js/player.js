@@ -7,11 +7,14 @@ export class Player {
         this.gameHeight = gameHeight;
         this.image = document.getElementById('submarineSprite');
         
-        // 1. Set basic properties
-        this.width = 103; 
-        this.height = 102;
+        // TOTAL WIDTH (453) / 8 COLUMNS = 56.6 (We'll use 56)
+        // TOTAL HEIGHT (550) / 10 ROWS = 55
+        this.width = 56;  
+        this.height = 55; 
+
         this.x = gameWidth / 2 - this.width / 2;
         this.y = gameHeight / 2 - this.height / 2;
+        
         this.frameX = 0;
         this.frameY = 0;
         this.maxSpeed = 4;
@@ -61,9 +64,12 @@ export class Player {
     }
 
     draw(context) {
-        context.drawImage(this.image,
-            this.frameX * this.width, this.frameY * this.height, this.width, this.height,
-            this.x, this.y, this.width, this.height
+        context.drawImage(
+            this.image,
+            this.frameX * this.width, this.frameY * this.height, // Source X, Y
+            this.width, this.height,                             // Source Width, Height
+            this.x, this.y,                                      // Canvas X, Y
+            this.width, this.height                              // Draw Size
         );
     }
 }
