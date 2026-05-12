@@ -17,9 +17,10 @@ class Layer {
         // The background moves based on the game's overall speed
         this.x -= this.game.speed * this.speedModifier;
     }
-    draw(context) {
-        context.drawImage(this.image, this.x, this.y, this.width, this.height);
-        context.drawImage(this.image, this.x + this.width, this.y, this.width, this.height);
+        draw(context) {
+        // Note the 'this.game.height' at the end—this stretches the image to fit
+        context.drawImage(this.image, this.x, 0, this.width, this.game.height);
+        context.drawImage(this.image, this.x + this.width, 0, this.width, this.game.height);
     }
 }
 

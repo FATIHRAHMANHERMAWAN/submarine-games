@@ -1,8 +1,7 @@
 export const states = {
     IDLE: 0,
     MOVING_UP: 1,
-    MOVING_DOWN: 2,
-    MOVING_SIDE: 3
+    MOVING_DOWN: 2
 };
 
 class State {
