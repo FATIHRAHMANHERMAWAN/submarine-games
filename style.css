@@ -6,11 +6,18 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    overflow: hidden;
+    overflow: hidden; /* Prevents any scrollbars during movement */
 }
 
 #gameCanvas {
     border: 3px solid #004466;
     background: linear-gradient(#001a33, #000811);
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+    max-width: 100%; /* Responsive scaling */
+    max-height: 100%;
+}
+
+/* Ensure hidden images stay hidden and don't affect flexbox */
+#assets {
+    display: none;
 }
