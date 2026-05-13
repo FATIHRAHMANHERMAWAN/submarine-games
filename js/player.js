@@ -34,17 +34,26 @@ export class Player {
         this.setState(states.IDLE);
     }
 
+    // Inside js/player.js
     update(input) {
         if (!this.currentState) this.setState(states.IDLE);
         this.currentState.handleInput(input);
 
-        // Multi-directional tracking for seamless diagonals
-        if (input.includes('ArrowUp')) this.y -= this.maxSpeed;
-        if (input.includes('ArrowDown')) this.y += this.maxSpeed;
-        if (input.includes('ArrowLeft')) this.x -= this.maxSpeed;
-        if (input.includes('ArrowRight')) this.x += this.maxSpeed;
+        // MOUSE AIM ENGINE
+        const playerCenterX = this.x + this.renderWidth / 2;
+        if (input.mouse.x < playerCenterX) {
+            this.facing = 'left';
+        } else {
+            this.facing = 'right';
+        }
 
-        // Screen boundary safety nets
+        // KEYBOARD MOVEMENT ENGINE (Updated to use input.keys.includes)
+        if (input.keys.includes('ArrowUp')) this.y -= this.maxSpeed;
+        if (input.keys.includes('ArrowDown')) this.y += this.maxSpeed;
+        if (input.keys.includes('ArrowLeft')) this.x -= this.maxSpeed;
+        if (input.keys.includes('ArrowRight')) this.x += this.maxSpeed;
+
+        // Window Boundaries
         if (this.x < 0) this.x = 0;
         if (this.x > this.gameWidth - this.renderWidth) this.x = this.gameWidth - this.renderWidth;
         if (this.y < 0) this.y = 0;

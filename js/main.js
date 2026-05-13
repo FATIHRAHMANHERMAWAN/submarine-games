@@ -7,14 +7,14 @@ window.addEventListener('load', function() {
     const ctx = canvas.getContext('2d');
 
     class Game {
-        constructor(width, height) {
-            this.width = width;
-            this.height = height;
-            this.speed = 3; 
-            this.background = new Background(this);
-            this.player = new Player(this.width, this.height);
-            this.input = new InputHandler();
-        }
+        constructor(canvasElement) {
+        this.width = canvasElement.width;
+        this.height = canvasElement.height;
+        this.speed = 3; 
+        this.background = new Background(this);
+        this.player = new Player(this.width, this.height);
+        this.input = new InputHandler(canvasElement); // Pass canvas here
+    }
         // New method to handle resizing internally
         resize(newWidth, newHeight) {
             this.width = newWidth;
@@ -25,7 +25,7 @@ window.addEventListener('load', function() {
         }
         update() {
             this.background.update();
-            this.player.update(this.input.keys);
+            this.player.update(this.input);
         }
         draw(context) {
             this.background.draw(context);
@@ -34,7 +34,7 @@ window.addEventListener('load', function() {
     }
 
     // 1. Initialize the game FIRST
-    const game = new Game(window.innerWidth, window.innerHeight);
+    const game = new Game(canvas);
 
     // 2. Define resize function AFTER game is created
     function resizeCanvas() {
