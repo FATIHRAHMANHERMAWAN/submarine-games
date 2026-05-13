@@ -12,73 +12,160 @@ window.addEventListener('load', function() {
             this.width = canvasElement.width;
             this.height = canvasElement.height;
             this.speed = 2; 
+            
+            // Core States: 'home', 'playing', 'victory'
+            this.gameState = 'home';
+            this.score = 0;
+            this.victoryCondition = 5;
+
+            // Audio Asset Setup (Ensure a music file exists at this path!)
+            this.bgMusic = new Audio('src/backsound.mp3');
+            this.bgMusic.loop = true;
+            this.bgMusic.volume = 0.4; // 40% volume mix
+
             this.background = new Background(this);
             this.player = new Player(this);
             this.input = new InputHandler(canvasElement);
 
-            // Shmup Entity Arrays
             this.projectiles = [];
             this.enemies = [];
             this.enemyProjectiles = [];
 
-            // Spawn engines
             this.enemyTimer = 0;
-            this.enemyInterval = 1500; // Spawns an enemy every 1.5 seconds
+            this.enemyInterval = 1500; 
         }
+
+        // Resets entities and positions for fresh playthroughs
+        resetGame() {
+            this.score = 0;
+            this.projectiles = [];
+            this.enemies = [];
+            this.enemyProjectiles = [];
+            this.enemyTimer = 0;
+            this.player.x = this.width / 2 - this.player.renderWidth / 2;
+            this.player.y = this.height / 2 - this.player.renderHeight / 2;
+        }
+
         resize(newWidth, newHeight) {
             this.width = newWidth;
             this.height = newHeight;
         }
+
         update(deltaTime) {
+            // Update background elements uniformly across all menus
             this.background.update();
-            this.player.update(this.input, deltaTime);
 
-            // 1. Process player torpedo updates
-            this.projectiles.forEach(p => p.update());
-            this.projectiles = this.projectiles.filter(p => !p.markedForDeletion);
-
-            // 2. Loop level spawn control engine
-            this.enemyTimer += deltaTime;
-            if (this.enemyTimer > this.enemyInterval) {
-                this.enemies.push(new Enemy(this));
-                this.enemyTimer = 0;
+            // MENU SCREEN LOGIC
+            if (this.gameState === 'home') {
+                if (this.input.mouse.pressed) {
+                    this.resetGame();
+                    this.gameState = 'playing';
+                    this.bgMusic.play().catch(err => console.log("Audio play blocked: ", err));
+                    this.input.mouse.pressed = false; // Reset toggle
+                }
+                return;
             }
 
-            // 3. Process enemy tracking + collision logic
-            this.enemies.forEach(enemy => {
-                enemy.update(deltaTime);
-                
-                // Torpedo hits enemy
-                this.projectiles.forEach(projectile => {
-                    if (this.checkCollision(projectile, enemy)) {
-                        enemy.markedForDeletion = true;
-                        projectile.markedForDeletion = true;
+            if (this.gameState === 'victory') {
+                if (this.input.mouse.pressed) {
+                    this.gameState = 'home';
+                    this.input.mouse.pressed = false; // Reset toggle
+                }
+                return;
+            }
+
+            // ACTIVE GAMEPLAY LOGIC RUNTIME
+            if (this.gameState === 'playing') {
+                this.player.update(this.input, deltaTime);
+
+                this.projectiles.forEach(p => p.update());
+                this.projectiles = this.projectiles.filter(p => !p.markedForDeletion);
+
+                this.enemyTimer += deltaTime;
+                if (this.enemyTimer > this.enemyInterval) {
+                    this.enemies.push(new Enemy(this));
+                    this.enemyTimer = 0;
+                }
+
+                this.enemies.forEach(enemy => {
+                    enemy.update(deltaTime);
+                    
+                    this.projectiles.forEach(projectile => {
+                        if (this.checkCollision(projectile, enemy)) {
+                            enemy.markedForDeletion = true;
+                            projectile.markedForDeletion = true;
+                            this.score++;
+
+                            // VICTORY EVALUATION ENGINE
+                            if (this.score >= this.victoryCondition) {
+                                this.gameState = 'victory';
+                                this.bgMusic.pause();
+                                this.bgMusic.currentTime = 0; // Rewind track back to the start
+                            }
+                        }
+                    });
+                });
+                this.enemies = this.enemies.filter(e => !e.markedForDeletion);
+
+                this.enemyProjectiles.forEach(ep => {
+                    ep.update();
+                    if (this.checkCollision(ep, this.player)) {
+                        ep.markedForDeletion = true;
                     }
                 });
-            });
-            this.enemies = this.enemies.filter(e => !e.markedForDeletion);
-
-            // 4. Process enemy bullet paths + player collision
-            this.enemyProjectiles.forEach(ep => {
-                ep.update();
-                if (this.checkCollision(ep, this.player)) {
-                    ep.markedForDeletion = true;
-                    console.log("Player Submarine Hit!"); // Structural collision hook position
-                }
-            });
-            this.enemyProjectiles = this.enemyProjectiles.filter(ep => !ep.markedForDeletion);
+                this.enemyProjectiles = this.enemyProjectiles.filter(ep => !ep.markedForDeletion);
+            }
         }
+
         draw(context) {
             this.background.draw(context);
-            this.player.draw(context);
+
+            // RENDER LOGIC OVERLAYS BASED ON GAME STATE
+            if (this.gameState === 'home') {
+                context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                context.fillRect(0, 0, this.width, this.height);
+
+                context.textAlign = 'center';
+                context.fillStyle = '#00ffff';
+                context.font = 'bold 48px Courier New';
+                context.fillText('SUBMARINE MODULAR GAME', this.width / 2, this.height / 2 - 40);
+
+                context.fillStyle = '#ffffff';
+                context.font = '24px Courier New';
+                context.fillText('Click Anywhere to Deploy Submarine', this.width / 2, this.height / 2 + 30);
+            } 
             
-            // Execute batch render lists
-            this.projectiles.forEach(p => p.draw(context));
-            this.enemies.forEach(e => e.draw(context));
-            this.enemyProjectiles.forEach(ep => ep.draw(context));
+            else if (this.gameState === 'playing') {
+                this.player.draw(context);
+                this.projectiles.forEach(p => p.draw(context));
+                this.enemies.forEach(e => e.draw(context));
+                this.enemyProjectiles.forEach(ep => ep.draw(context));
+
+                // Live Core Score HUD UI
+                context.textAlign = 'left';
+                context.fillStyle = '#ffcc00';
+                context.font = 'bold 24px Courier New';
+                context.fillText(`KILLS: ${this.score} / ${this.victoryCondition}`, 30, 40);
+            } 
+            
+            else if (this.gameState === 'victory') {
+                context.fillStyle = 'rgba(0, 15, 10, 0.85)';
+                context.fillRect(0, 0, this.width, this.height);
+
+                context.textAlign = 'center';
+                context.fillStyle = '#33ff33';
+                context.font = 'bold 64px Courier New';
+                context.fillText('CONGRATULATIONS!', this.width / 2, this.height / 2 - 40);
+
+                context.fillStyle = '#ffffff';
+                context.font = '24px Courier New';
+                context.fillText('Mission Complete! Hit 5 Targets.', this.width / 2, this.height / 2 + 20);
+                context.fillStyle = '#888888';
+                context.fillText('Click anywhere to return Home', this.width / 2, this.height / 2 + 80);
+            }
         }
+
         checkCollision(rect1, rect2) {
-            // Checks bounds, adjusting for upscale differences automatically
             const w1 = rect1.renderWidth || rect1.width;
             const h1 = rect1.renderHeight || rect1.height;
             const w2 = rect2.renderWidth || rect2.width;
@@ -103,7 +190,6 @@ window.addEventListener('load', function() {
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // High performance frame timestamp loop configuration
     let lastTime = 0;
     function animate(timeStamp) {
         const deltaTime = timeStamp - lastTime || 0;
