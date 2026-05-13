@@ -1,26 +1,38 @@
 // js/input.js
 export class InputHandler {
-    constructor(canvas) { // Pass the canvas element here
+    constructor(canvas) {
         this.keys = [];
-        this.mouse = { x: 0, y: 0 }; // Track mouse coordinates
+        this.mouse = { x: 0, y: 0 };
 
-        // Keyboard tracking
+        // Key Translation Map: Redirects WASD inputs into standard Arrow strings
+        const keyMap = {
+            'w': 'ArrowUp',    'W': 'ArrowUp',
+            's': 'ArrowDown',  'S': 'ArrowDown',
+            'a': 'ArrowLeft',  'A': 'ArrowLeft',
+            'd': 'ArrowRight', 'D': 'ArrowRight'
+        };
+
+        const allowedKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+
         window.addEventListener('keydown', (e) => {
-            if ((e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
-                 e.key === 'ArrowLeft' || e.key === 'ArrowRight') && 
-                this.keys.indexOf(e.key) === -1) {
-                this.keys.push(e.key);
+            // If the pressed key is in our map, translate it. Otherwise, use the original string.
+            const targetKey = keyMap[e.key] || e.key;
+
+            if (allowedKeys.includes(targetKey) && !this.keys.includes(targetKey)) {
+                this.keys.push(targetKey);
             }
         });
+
         window.addEventListener('keyup', (e) => {
-            const index = this.keys.indexOf(e.key);
-            if (index > -1) this.keys.splice(index, 1);
+            const targetKey = keyMap[e.key] || e.key;
+            const index = this.keys.indexOf(targetKey);
+            if (index > -1) {
+                this.keys.splice(index, 1);
+            }
         });
 
-        // Mouse tracking
         window.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
-            // Calculate mouse position relative strictly to the canvas viewport
             this.mouse.x = e.clientX - rect.left;
             this.mouse.y = e.clientY - rect.top;
         });
