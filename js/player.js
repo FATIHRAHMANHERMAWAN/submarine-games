@@ -9,7 +9,7 @@ export class Player {
         
         // Extracted grid measurements for your 453x550 sheet
         this.width = 56;  
-        this.height = 55;
+        this.height = 57;
         
         // Upscale factor for laptop gameplay clarity
         this.renderScale = 1.0; 
