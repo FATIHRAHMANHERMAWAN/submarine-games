@@ -7,36 +7,28 @@ export class Player {
         this.gameHeight = gameHeight;
         this.image = document.getElementById('submarineSprite');
         
-        // Exact frame dimensions based on your 453x550 sheet
+        // Extracted grid measurements for your 453x550 sheet
         this.width = 56;  
         this.height = 55;
         
-        // Render size multiplier (makes the 56x55 crop look bigger on screen)
+        // Upscale factor for laptop gameplay clarity
         this.renderScale = 1.0; 
         this.renderWidth = this.width * this.renderScale;
         this.renderHeight = this.height * this.renderScale;
 
         this.x = gameWidth / 2 - this.renderWidth / 2;
         this.y = gameHeight / 2 - this.renderHeight / 2;
-
-
-        // this.width = 56;  
-        // this.height = 55; 
-
-        // this.x = gameWidth / 2 - this.width / 2;
-        // this.y = gameHeight / 2 - this.height / 2;
         
-        this.frameX = 0; // Stays locked at the first column frame now
-        this.frameY = 0; // Governed by states
+        this.frameX = 0; // Base frame column
+        this.frameY = 0; // State row matrix marker
         this.maxSpeed = 5;
-        this.facing = 'right'; // Tracks horizontal orientation: 'right' or 'left'
+        this.facing = 'right'; 
 
-        // Initialize FSM Array
         this.states = [
-            new Idle(this),              // 0
-            new MovingUp(this),          // 1
-            new MovingDown(this),        // 2
-            new MovingHorizontal(this)   // 3
+            new Idle(this),              
+            new MovingUp(this),          
+            new MovingDown(this),        
+            new MovingHorizontal(this)   
         ];
         this.currentState = null;
         this.setState(states.IDLE);
@@ -46,13 +38,13 @@ export class Player {
         if (!this.currentState) this.setState(states.IDLE);
         this.currentState.handleInput(input);
 
-        // 8-Directional Position Modifications
+        // Multi-directional tracking for seamless diagonals
         if (input.includes('ArrowUp')) this.y -= this.maxSpeed;
         if (input.includes('ArrowDown')) this.y += this.maxSpeed;
         if (input.includes('ArrowLeft')) this.x -= this.maxSpeed;
         if (input.includes('ArrowRight')) this.x += this.maxSpeed;
 
-        // Window Boundaries
+        // Screen boundary safety nets
         if (this.x < 0) this.x = 0;
         if (this.x > this.gameWidth - this.renderWidth) this.x = this.gameWidth - this.renderWidth;
         if (this.y < 0) this.y = 0;
@@ -69,24 +61,32 @@ export class Player {
     draw(context) {
         context.save();
 
-        if (this.facing === 'left') {
+        // Determine if the sprite needs to be horizontally mirrored.
+        let shouldFlip = this.facing === 'left';
+        
+        // SWAP LOGIC: If we are on row 4 (descend), invert the flipping rule
+        // because the base sprite asset is already facing left.
+        if (this.frameY === 4) {
+            shouldFlip = this.facing === 'right';
+        }
+
+        if (shouldFlip) {
             // Move canvas coordinate matrix pivot point to the center of the player box
             context.translate(this.x + this.renderWidth / 2, this.y + this.renderHeight / 2);
             // Flip horizontal axis
             context.scale(-1, 1);
-            // Draw relative to flipped focal center
             context.drawImage(this.image,
                 this.frameX * this.width, this.frameY * this.height, this.width, this.height,
                 -this.renderWidth / 2, -this.renderHeight / 2, this.renderWidth, this.renderHeight
             );
         } else {
-            // Standard right drawing sequence
+            // Standard drawing sequence
             context.drawImage(this.image,
                 this.frameX * this.width, this.frameY * this.height, this.width, this.height,
                 this.x, this.y, this.renderWidth, this.renderHeight
             );
         }
 
-        context.restore(); // Undo scale transformations for subsequent draws
+        context.restore(); 
     }
 }

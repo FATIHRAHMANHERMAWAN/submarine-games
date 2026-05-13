@@ -18,15 +18,19 @@ export class Idle extends State {
         this.player = player;
     }
     enter() {
-        this.player.frameY = 0; // Standard row
+        this.player.frameY = 0; // Clean, standard row
     }
     handleInput(input) {
-        if (input.includes('ArrowLeft') || input.includes('ArrowRight')) {
-            this.player.setState(states.MOVING_HORIZONTAL);
-        } else if (input.includes('ArrowUp')) {
+        // Always monitor horizontal orientation changes
+        if (input.includes('ArrowLeft')) this.player.facing = 'left';
+        if (input.includes('ArrowRight')) this.player.facing = 'right';
+
+        if (input.includes('ArrowUp')) {
             this.player.setState(states.MOVING_UP);
         } else if (input.includes('ArrowDown')) {
             this.player.setState(states.MOVING_DOWN);
+        } else if (input.includes('ArrowLeft') || input.includes('ArrowRight')) {
+            this.player.setState(states.MOVING_HORIZONTAL);
         }
     }
 }
@@ -37,7 +41,7 @@ export class MovingHorizontal extends State {
         this.player = player;
     }
     enter() {
-        this.player.frameY = 0; // Propeller spinning row
+        this.player.frameY = 0; // Horizontal movement row
     }
     handleInput(input) {
         if (input.includes('ArrowLeft')) this.player.facing = 'left';
@@ -45,7 +49,9 @@ export class MovingHorizontal extends State {
 
         if (input.includes('ArrowUp')) this.player.setState(states.MOVING_UP);
         else if (input.includes('ArrowDown')) this.player.setState(states.MOVING_DOWN);
-        else if (input.length === 0) this.player.setState(states.IDLE);
+        else if (!input.includes('ArrowLeft') && !input.includes('ArrowRight')) {
+            this.player.setState(states.IDLE);
+        }
     }
 }
 
@@ -55,7 +61,8 @@ export class MovingUp extends State {
         this.player = player;
     }
     enter() {
-        this.player.frameY = 6; // Row with massive vertical bubbles
+        // Shifted from 6 to 5 to accurately target the sub hull with ascending bubbles beneath it
+        this.player.frameY = 5; 
     }
     handleInput(input) {
         if (input.includes('ArrowLeft')) this.player.facing = 'left';
@@ -63,6 +70,7 @@ export class MovingUp extends State {
 
         if (!input.includes('ArrowUp')) {
             if (input.includes('ArrowDown')) this.player.setState(states.MOVING_DOWN);
+            else if (input.includes('ArrowLeft') || input.includes('ArrowRight')) this.player.setState(states.MOVING_HORIZONTAL);
             else this.player.setState(states.IDLE);
         }
     }
@@ -74,7 +82,7 @@ export class MovingDown extends State {
         this.player = player;
     }
     enter() {
-        this.player.frameY = 4; // Row with diving current lines
+        this.player.frameY = 4; // Targets the row with water current/diving lines
     }
     handleInput(input) {
         if (input.includes('ArrowLeft')) this.player.facing = 'left';
@@ -82,6 +90,7 @@ export class MovingDown extends State {
 
         if (!input.includes('ArrowDown')) {
             if (input.includes('ArrowUp')) this.player.setState(states.MOVING_UP);
+            else if (input.includes('ArrowLeft') || input.includes('ArrowRight')) this.player.setState(states.MOVING_HORIZONTAL);
             else this.player.setState(states.IDLE);
         }
     }
