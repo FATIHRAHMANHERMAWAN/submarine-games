@@ -1,10 +1,11 @@
 export class Projectile {
-    constructor(game, x, y, direction) {
+    constructor(game, x, y, direction, image) {
         this.game = game;
         this.x = x;
         this.y = y;
-        this.width = 24;
-        this.height = 6;
+        this.image = image; // The sprite image
+        this.width = 32;    // Adjusted for sprite size
+        this.height = 16;
         this.speed = 12;
         this.direction = direction;
         this.markedForDeletion = false;
@@ -13,28 +14,37 @@ export class Projectile {
         if (this.direction === 'right') this.x += this.speed;
         else this.x -= this.speed;
 
-        // Automatically delete if it exits the viewport boundaries
         if (this.x > this.game.width || this.x < -this.width) {
             this.markedForDeletion = true;
         }
     }
     draw(context) {
-        context.fillStyle = '#ffcc00'; // Bright neon torpedo yellow
-        context.fillRect(this.x, this.y, this.width, this.height);
+        context.save();
+        context.translate(this.x + this.width / 2, this.y + this.height / 2);
+        
+        // Flip the sprite if moving left
+        if (this.direction === 'left') {
+            context.scale(-1, 1);
+        }
+        
+        // Draw the image centered
+        if (this.image) {
+            context.drawImage(this.image, -this.width / 2, -this.height / 2, this.width, this.height);
+        } else {
+            // Fallback if image isn't loaded
+            context.fillStyle = '#ffcc00';
+            context.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+        }
+        context.restore();
     }
 }
 
 export class EnemyProjectile extends Projectile {
-    constructor(game, x, y) {
-        super(game, x, y, 'left');
+    constructor(game, x, y, image) {
+        super(game, x, y, 'left', image);
         this.speed = 6;
-        this.width = 10;
-        this.height = 10;
+        this.width = 20;
+        this.height = 20;
     }
-    draw(context) {
-        context.fillStyle = '#ff3333'; // Crimson enemy plasma red
-        context.beginPath();
-        context.arc(this.x, this.y, this.width / 2, 0, Math.PI * 2);
-        context.fill();
-    }
+    // Draws the enemy projectile (e.g., a dark torpedo or mine)
 }

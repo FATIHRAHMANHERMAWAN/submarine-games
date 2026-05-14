@@ -37,10 +37,9 @@ export class Player {
     }
 
     shoot() {
-        let spawnX = this.x + this.renderWidth;
-        if (this.facing === 'left') spawnX = this.x;
-        
-        this.game.projectiles.push(new Projectile(this.game, spawnX, this.y + this.renderHeight / 2, this.facing));
+        let spawnX = this.x + (this.facing === 'right' ? this.renderWidth : 0);
+        const img = document.getElementById('playerProjectileSprite'); // Ensure this ID exists in HTML
+        this.game.projectiles.push(new Projectile(this.game, spawnX, this.y + this.renderHeight / 2, this.facing, img));
     }
 
     update(input, deltaTime) {
