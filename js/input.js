@@ -1,3 +1,4 @@
+// js/input.js
 export class InputHandler {
     constructor(canvas) {
         this.keys = [];
@@ -8,10 +9,11 @@ export class InputHandler {
             's': 'ArrowDown',  'S': 'ArrowDown',
             'a': 'ArrowLeft',  'A': 'ArrowLeft',
             'd': 'ArrowRight', 'D': 'ArrowRight',
-            'f': 'Shoot',      'F': 'Shoot'
+            'f': 'Shoot',      'F': 'Shoot',
+            'Escape': 'Escape' // Added Escape key support
         };
 
-        const allowedKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Shoot'];
+        const allowedKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Shoot', 'Escape'];
 
         window.addEventListener('keydown', (e) => {
             const targetKey = keyMap[e.key] || e.key;
@@ -26,17 +28,15 @@ export class InputHandler {
             if (index > -1) this.keys.splice(index, 1);
         });
 
+        // ... mouse listeners remain the same ...
         window.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
             this.mouse.x = e.clientX - rect.left;
             this.mouse.y = e.clientY - rect.top;
         });
-
-        // Mouse click listening engines
         window.addEventListener('mousedown', (e) => {
             if (e.button === 0) this.mouse.pressed = true;
         });
-
         window.addEventListener('mouseup', (e) => {
             if (e.button === 0) this.mouse.pressed = false;
         });

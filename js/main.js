@@ -13,7 +13,7 @@ window.addEventListener('load', function() {
             this.height = canvasElement.height;
             this.speed = 2; 
             
-            // Core States: 'home', 'playing', 'victory'
+            // Core States: 'home', 'playing', 'pausing', 'victory'
             this.gameState = 'home';
             this.score = 0;
             this.victoryCondition = 5;
@@ -72,6 +72,30 @@ window.addEventListener('load', function() {
                     this.input.mouse.pressed = false; // Reset toggle
                 }
                 return;
+            }
+
+            // ESCAPE KEY DETECTION (Triggers Pause)
+            if (this.input.keys.includes('Escape') && this.gameState === 'playing') {
+                this.gameState = 'pausing';
+                this.input.keys = []; // Clear key array to prevent rapid toggling back and forth
+            }
+
+            // PAUSE MENU LOGIC
+            if (this.gameState === 'pausing') {
+                if (this.input.mouse.pressed) {
+                    // Check if user clicked the "YES" side (Quit)
+                    if (this.input.mouse.x > this.width / 2 - 100 && this.input.mouse.x < this.width / 2 - 20) {
+                        this.gameState = 'home';
+                        this.bgMusic.pause();
+                        this.bgMusic.currentTime = 0; // Rewind audio
+                    } 
+                    // Check if user clicked the "NO" side (Resume)
+                    else if (this.input.mouse.x > this.width / 2 + 20 && this.input.mouse.x < this.width / 2 + 100) {
+                        this.gameState = 'playing';
+                    }
+                    this.input.mouse.pressed = false; // Reset mouse click
+                }
+                return; // Stop updating game objects while paused
             }
 
             // ACTIVE GAMEPLAY LOGIC RUNTIME
@@ -135,7 +159,7 @@ window.addEventListener('load', function() {
                 context.fillText('Click Anywhere to Deploy Submarine', this.width / 2, this.height / 2 + 30);
             } 
             
-            else if (this.gameState === 'playing') {
+            else if (this.gameState === 'playing' || this.gameState === 'pausing') {
                 this.player.draw(context);
                 this.projectiles.forEach(p => p.draw(context));
                 this.enemies.forEach(e => e.draw(context));
@@ -146,6 +170,24 @@ window.addEventListener('load', function() {
                 context.fillStyle = '#ffcc00';
                 context.font = 'bold 24px Courier New';
                 context.fillText(`KILLS: ${this.score} / ${this.victoryCondition}`, 30, 40);
+
+                // PAUSE MENU OVERLAY
+                if (this.gameState === 'pausing') {
+                    context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    context.fillRect(0, 0, this.width, this.height);
+
+                    context.textAlign = 'center';
+                    context.fillStyle = '#ffffff';
+                    context.font = '32px Courier New';
+                    context.fillText('QUIT TO HOME PAGE?', this.width / 2, this.height / 2 - 20);
+
+                    context.font = 'bold 28px Courier New';
+                    context.fillStyle = '#ff3333'; 
+                    context.fillText('YES', this.width / 2 - 60, this.height / 2 + 40);
+                    
+                    context.fillStyle = '#33ff33'; 
+                    context.fillText('NO', this.width / 2 + 60, this.height / 2 + 40);
+                }
             } 
             
             else if (this.gameState === 'victory') {
