@@ -49,8 +49,15 @@ export class Player {
     shoot() {
         let spawnX = this.x + (this.facing === 'right' ? this.renderWidth : 0);
         const img = document.getElementById('playerProjectileSprite'); 
+
+        // 1. Create the projectile
         this.game.projectiles.push(new Projectile(this.game, spawnX, this.y + this.renderHeight / 2, this.facing, img));
+
+        // 2. Play the sound (Reset first for rapid fire)
+        this.game.shootSound.currentTime = 0; 
+        this.game.shootSound.play().catch(err => console.log("Audio play blocked:", err));
     }
+    
 
     update(input, deltaTime) {
         if (!this.currentState) this.setState(states.IDLE);

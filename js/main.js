@@ -24,6 +24,10 @@ window.addEventListener('load', function() {
             this.bgMusic.loop = true;
             this.bgMusic.volume = 0.4; 
 
+            // TORPEDO SOUND
+            this.shootSound = new Audio('src/torpedosound.ogg'); // Ensure this file exists in your src folder
+            this.shootSound.volume = 0.5; // Adjust as needed
+
             this.background = new Background(this);
             this.player = new Player(this);
             this.input = new InputHandler(canvasElement);
