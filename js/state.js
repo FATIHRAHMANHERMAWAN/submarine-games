@@ -1,96 +1,98 @@
-// js/state.js
+// Oyun içindeki oyuncu durumlarını temsil eden sabitler
 export const states = {
-    IDLE: 0,
-    MOVING_UP: 1,
-    MOVING_DOWN: 2,
-    MOVING_HORIZONTAL: 3
+    IDLE: 0,              // Durma/Boşta
+    MOVING_UP: 1,         // Yukarı hareket
+    MOVING_DOWN: 2,       // Aşağı hareket
+    MOVING_HORIZONTAL: 3  // Yatay (Sağ-Sol) hareket
 };
 
+// Tüm durumların türetildiği temel Sınıf
 class State {
     constructor(state) {
         this.state = state;
     }
 }
 
+// DURMA (IDLE) DURUMU
 export class Idle extends State {
     constructor(player) {
         super(states.IDLE);
         this.player = player;
     }
+    // Bu duruma ilk girildiğinde çalışır
     enter() {
-        this.player.frameY = 0; // Clean, standard row
+        // Sprite sayfasındaki nötr/standart satıra geçer
+        this.player.frameY = 0; 
     }
+    // Tuş girişlerine göre durum değiştirme mantığı
     handleInput(input) {
-        // Always monitor horizontal orientation changes
-        if (input.includes('ArrowLeft')) this.player.facing = 'left';
-        if (input.includes('ArrowRight')) this.player.facing = 'right';
-
-        if (input.includes('ArrowUp')) {
+        if (input.keys.includes('ArrowUp')) {
             this.player.setState(states.MOVING_UP);
-        } else if (input.includes('ArrowDown')) {
+        } else if (input.keys.includes('ArrowDown')) {
             this.player.setState(states.MOVING_DOWN);
-        } else if (input.includes('ArrowLeft') || input.includes('ArrowRight')) {
+        } else if (input.keys.includes('ArrowLeft') || input.keys.includes('ArrowRight')) {
             this.player.setState(states.MOVING_HORIZONTAL);
         }
     }
 }
 
+// YATAY HAREKET DURUMU
 export class MovingHorizontal extends State {
     constructor(player) {
         super(states.MOVING_HORIZONTAL);
         this.player = player;
     }
     enter() {
-        this.player.frameY = 0; // Horizontal movement row
+        // Yatay hareket için uygun animasyon satırını seçer
+        this.player.frameY = 0; 
     }
     handleInput(input) {
-        if (input.includes('ArrowLeft')) this.player.facing = 'left';
-        if (input.includes('ArrowRight')) this.player.facing = 'right';
-
-        if (input.includes('ArrowUp')) this.player.setState(states.MOVING_UP);
-        else if (input.includes('ArrowDown')) this.player.setState(states.MOVING_DOWN);
-        else if (!input.includes('ArrowLeft') && !input.includes('ArrowRight')) {
+        if (input.keys.includes('ArrowUp')) {
+            this.player.setState(states.MOVING_UP);
+        } else if (input.keys.includes('ArrowDown')) {
+            this.player.setState(states.MOVING_DOWN);
+        } else if (!input.keys.includes('ArrowLeft') && !input.keys.includes('ArrowRight')) {
+            // Hiçbir yatay tuşa basılmıyorsa durma durumuna döner
             this.player.setState(states.IDLE);
         }
     }
 }
 
+// YUKARI HAREKET (YÜKSELME) DURUMU
 export class MovingUp extends State {
     constructor(player) {
         super(states.MOVING_UP);
         this.player = player;
     }
     enter() {
-        // Shifted from 6 to 5 to accurately target the sub hull with ascending bubbles beneath it
+        // Denizaltının altından baloncuklar çıkan yükselme animasyon satırı
         this.player.frameY = 5; 
     }
     handleInput(input) {
-        if (input.includes('ArrowLeft')) this.player.facing = 'left';
-        if (input.includes('ArrowRight')) this.player.facing = 'right';
-
-        if (!input.includes('ArrowUp')) {
-            if (input.includes('ArrowDown')) this.player.setState(states.MOVING_DOWN);
-            else if (input.includes('ArrowLeft') || input.includes('ArrowRight')) this.player.setState(states.MOVING_HORIZONTAL);
+        // Yukarı tuşu bırakıldığında ne yapılacağına karar verir
+        if (!input.keys.includes('ArrowUp')) {
+            if (input.keys.includes('ArrowDown')) this.player.setState(states.MOVING_DOWN);
+            else if (input.keys.includes('ArrowLeft') || input.keys.includes('ArrowRight')) this.player.setState(states.MOVING_HORIZONTAL);
             else this.player.setState(states.IDLE);
         }
     }
 }
 
+// AŞAĞI HAREKET (DALIŞ) DURUMU
 export class MovingDown extends State {
     constructor(player) {
         super(states.MOVING_DOWN);
         this.player = player;
     }
     enter() {
-        this.player.frameY = 4; // Targets the row with water current/diving lines
+        // Dalış efektlerinin ve akıntı çizgilerinin olduğu animasyon satırı
+        this.player.frameY = 4; 
     }
     handleInput(input) {
-        if (input.includes('ArrowLeft')) this.player.facing = 'left';
-        if (input.includes('ArrowRight')) this.player.facing = 'right';
-
-        if (!input.includes('ArrowDown')) {
-            if (input.includes('ArrowUp')) this.player.setState(states.MOVING_UP);
-            else if (input.includes('ArrowLeft') || input.includes('ArrowRight')) this.player.setState(states.MOVING_HORIZONTAL);
+        // Aşağı tuşu bırakıldığında geçilecek yeni durumu belirler
+        if (!input.keys.includes('ArrowDown')) {
+            if (input.keys.includes('ArrowUp')) this.player.setState(states.MOVING_UP);
+            else if (input.keys.includes('ArrowLeft') || input.keys.includes('ArrowRight')) this.player.setState(states.MOVING_HORIZONTAL);
             else this.player.setState(states.IDLE);
         }
     }
