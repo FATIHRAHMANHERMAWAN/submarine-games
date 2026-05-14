@@ -4,38 +4,42 @@ import { Projectile } from './projectile.js';
 export class Player {
     constructor(game) {
         this.game = game;
-        // 404 FIX: Ensure 'submarineSprite' matches the ID in your index.html exactly.
+        // HTML üzerindeki submarineSprite ID'li görseli bağlar
         this.image = document.getElementById('submarineSprite');
         
-        // SPRITE SHEET MATH (spritites3_3.png is 677x369)
-        // Using the exact mathematical floats avoids "drifting" pixels
-        this.sw = 677 / 4; // 169.25
-        this.sh = 369 / 2; // 184.5
+        // Sprite sayfasındaki her bir hücrenin boyutunu hesaplar (677/4 ve 369/2)
+        this.sw = 169.25; 
+        this.sh = 184.5;
 
-        // Use a slightly larger height to avoid squashing the sprite visuals
+        // Ekranda çizilecek temel boyutlar ve ölçeklendirme
         this.width = 60;  
         this.height = 45; 
         this.renderScale = 1.5; 
         this.renderWidth = this.width * this.renderScale;
         this.renderHeight = this.height * this.renderScale;
 
+        // Başlangıç konumunu ekranın ortası olarak ayarlar
         this.x = this.game.width / 2 - this.renderWidth / 2;
         this.y = this.game.height / 2 - this.renderHeight / 2;
         
+        // Sprite sayfasındaki aktif kare (koordinat bazlı)
         this.frameX = 0; 
         this.frameY = 0; 
 
+        // Fizik motoru değişkenleri (Hız, ivme ve sürtünme)
         this.vx = 0; 
         this.vy = 0; 
         this.acceleration = 0.5; 
-        this.friction = 0.92; // Slightly more friction for a "liquid" feel
+        this.friction = 0.92; 
 
         this.maxSpeed = 6;
-        this.facing = 'right'; 
+        this.facing = 'right'; // Bakış yönü (sağ veya sol)
 
+        // Ateş etme zamanlayıcısı ve bekleme süresi
         this.shootTimer = 0;
         this.shootCooldown = 200; 
 
+        // Durum makinesi (State Machine) kurulumu
         this.states = [
             new Idle(this),              
             new MovingUp(this),          
@@ -46,69 +50,68 @@ export class Player {
         this.setState(states.IDLE);
     }
 
-        // Inside player.js
     shoot() {
+        // Merminin denizaltının bakış yönüne göre doğru uçtan çıkmasını sağlar
         let spawnX = this.x + (this.facing === 'right' ? this.renderWidth : 0);
         const img = document.getElementById('playerProjectileSprite');
         
-        // REDIRECT: Push to entities.projectiles instead of game.projectiles
+        // Mermiyi ortak EntityManager listesine ekler
         this.game.entities.projectiles.push(
             new Projectile(this.game, spawnX, this.y + this.renderHeight / 2, this.facing, img)
         );
 
-        // Audio Trigger
+        // Ateş etme sesini çalar
         this.game.sounds.playShoot();
     }
-    
 
     update(input, deltaTime) {
+        // Durum makinesini başlatır ve girdileri kontrol eder
         if (!this.currentState) this.setState(states.IDLE);
         this.currentState.handleInput(input);
 
-        // PHYSICS ENGINE
+        // Klavye girdilerine göre ivmelenme hesaplar (Ok tuşları)
         if (input.keys.includes('ArrowUp')) this.vy -= this.acceleration;
         if (input.keys.includes('ArrowDown')) this.vy += this.acceleration;
         if (input.keys.includes('ArrowLeft')) this.vx -= this.acceleration;
         if (input.keys.includes('ArrowRight')) this.vx += this.acceleration;
 
+        // Sıvı hissi vermek için sürtünme uygular ve konumu günceller
         this.vx *= this.friction;
         this.vy *= this.friction;
-
         this.x += this.vx;
         this.y += this.vy;
 
-        // ANIMATION MAPPING (Fixed for spritites3_3.png)
+        // Dikey hıza göre sprite sayfasındaki ilgili kareyi seçer (Animasyon haritalama)
         if (this.vy < -2.0) {
-            this.frameX = 2; this.frameY = 0; // HARD UP (Vertical)
+            this.frameX = 2; this.frameY = 0; // Sert Yukarı
         } else if (this.vy < -0.5) {
-            this.frameX = 1; this.frameY = 0; // SLIGHT UP (Tilted)
+            this.frameX = 1; this.frameY = 0; // Hafif Yukarı
         } else if (this.vy > 2.0) {
-            this.frameX = 2; this.frameY = 1; // HARD DOWN (Vertical)
+            this.frameX = 2; this.frameY = 1; // Sert Aşağı
         } else if (this.vy > 0.5) {
-            this.frameX = 3; this.frameY = 0; // SLIGHT DOWN (Tilted)
+            this.frameX = 3; this.frameY = 0; // Hafif Aşağı
         } else {
-            this.frameX = 0; this.frameY = 0; // NEUTRAL
+            this.frameX = 0; this.frameY = 0; // Sabit/Nötr
         }
 
-        // ORIENTATION LOGIC
-        // We prioritize movement direction for facing to keep visuals intuitive
+        // Karakterin bakış yönünü belirler (Hız öncelikli, hız düşükse fare odaklı)
         if (this.vx > 0.2) this.facing = 'right';
         else if (this.vx < -0.2) this.facing = 'left';
         else {
-            // If horizontal velocity is low, follow the mouse
             const playerCenterX = this.x + this.renderWidth / 2;
             if (Math.abs(input.mouse.x - playerCenterX) > 20) {
                 this.facing = input.mouse.x < playerCenterX ? 'left' : 'right';
             }
         }
 
-        // SHOOTING & BOUNDARIES
+        // Ateş etme kontrolü ve bekleme süresi yönetimi
         if (this.shootTimer < this.shootCooldown) this.shootTimer += deltaTime;
         if ((input.keys.includes('Shoot') || input.mouse.pressed) && this.shootTimer >= this.shootCooldown) {
             this.shoot();
             this.shootTimer = 0;
         }
 
+        // Denizaltının ekran sınırlarından dışarı çıkmasını engeller
         if (this.x < 0) { this.x = 0; this.vx = 0; }
         if (this.x > this.game.width - this.renderWidth) { this.x = this.game.width - this.renderWidth; this.vx = 0; }
         if (this.y < 0) { this.y = 0; this.vy = 0; }
@@ -116,6 +119,7 @@ export class Player {
     }
 
     setState(stateIndex) {
+        // Oyuncunun durumunu değiştirir (Idle, Moving vb.)
         if (this.states[stateIndex]) {
             this.currentState = this.states[stateIndex];
             this.currentState.enter();
@@ -127,22 +131,21 @@ export class Player {
 
         context.save();
         
-        // UN-SMOOTHNESS FIX: 
-        // Do NOT use Math.round on the translation. 
-        // Allowing sub-pixel floats makes the motion look 100% continuous.
+        // Çizim koordinatlarını denizaltının merkezine taşır
         context.translate(this.x + this.renderWidth / 2, this.y + this.renderHeight / 2);
 
+        // Eğer denizaltı sola bakıyorsa görseli yatayda ters çevirir (Aynalama)
         if (this.facing === 'left') {
             context.scale(-1, 1);
         }
 
-        // DRAWING CALL
+        // Sprite sayfasından ilgili hücreyi keser ve ekrana çizer
         context.drawImage(
             this.image,
-            this.frameX * this.sw, this.frameY * this.sh, // Exact source clipping
-            this.sw, this.sh, 
-            -this.renderWidth / 2, -this.renderHeight / 2,
-            this.renderWidth, this.renderHeight
+            this.frameX * this.sw, this.frameY * this.sh, // Kaynak görsel kırpma (X, Y)
+            this.sw, this.sh,                             // Kaynak görsel kırpma boyutu
+            -this.renderWidth / 2, -this.renderHeight / 2, // Çizim konumu (Merkezleme)
+            this.renderWidth, this.renderHeight           // Çizim boyutu
         );
 
         context.restore();

@@ -1,6 +1,8 @@
 import { Player } from './player.js';
 import { InputHandler } from './input.js';
 import { Background } from './background.js';
+import { Enemy } from './enemy.js';
+import { Particle } from './particle.js'; // <-- Bu satırın varlığını kontrol et!
 import { UI } from './UI.js';
 import { SoundHandler } from './SoundHandler.js';
 import { EntityManager } from './EntityManager.js';

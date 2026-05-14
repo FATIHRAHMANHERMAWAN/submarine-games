@@ -1,37 +1,37 @@
-// background.js
-
-
-
 class Layer {
     constructor(game, image, speedModifier) {
         this.game = game;
         this.image = image;
         this.speedModifier = speedModifier;
         
-        // 1. The PNG properties
-        this.width = 1768; // The actual width of your PNG files
-        this.height = 500; // The actual height of your PNG files
+        // Görselin orijinal boyutları (PNG genişliği ve yüksekliği)
+        this.width = 1768; 
+        this.height = 500; 
         
+        // Başlangıç koordinatları
         this.x = 0;
         this.y = 0;
     }
 
     update() {
-        // If you want to use the gameState instead of the isPaused flag:
+        // Arkaplan sadece oyun 'playing' (oynanıyor) durumundaysa ve bilgi ekranı kapalıysa hareket eder
         if (this.game.gameState === 'playing' && this.game.showinfocondition === false) {
+            // Görsel tamamen sola kaydığında konumu sıfırlayarak sonsuz döngü oluşturur
             if (this.x <= -this.width) this.x = 0;
+            
+            // Oyun hızı ve katmanın kendi hız çarpanına göre sola kayma miktarını hesaplar
             this.x -= this.game.speed * this.speedModifier;
         }
     }
 
     draw(context) {
-        // 3. THE "STRETCH" FIX
-        // We use this.width for the horizontal loop, 
-        // but this.game.height to ensure it covers the bottom of the screen.
+        // İlk kopyayı çizdirir (Yüksekliği oyun penceresine göre esnetir)
         context.drawImage(this.image, this.x, 0, this.width, this.game.height);
+        
+        // Görselin bitişine ikinci kopyayı ekleyerek boşluk kalmasını engeller
         context.drawImage(this.image, this.x + this.width, 0, this.width, this.game.height);
         
-        // If your screen is WIDER than 1768px, you might need a third copy:
+        // Eğer ekran genişliği görselden daha büyükse, sağ tarafta siyah boşluk kalmaması için üçüncü bir kopya çizer
         if (this.game.width > this.width) {
             context.drawImage(this.image, this.x + (this.width * 2), 0, this.width, this.game.height);
         }
@@ -41,7 +41,9 @@ class Layer {
 export class Background {
     constructor(game) {
         this.game = game;
-        // Map all your layers
+        
+        // Tüm paralaks katmanlarını farklı hız çarpanlarıyla tanımlar
+        // Katmanlar diziliş sırasına göre (arkadan öne doğru) çizilir
         this.layers = [
             new Layer(this.game, document.getElementById('layer6'), 0.1),
             new Layer(this.game, document.getElementById('layer1'), 0.2),
@@ -51,10 +53,14 @@ export class Background {
             new Layer(this.game, document.getElementById('layer5'), 1.2),
         ];
     }
+
     update() {
+        // Listedeki tüm katmanların konumlarını tek tek günceller
         this.layers.forEach(layer => layer.update());
     }
+
     draw(context) {
+        // Listedeki tüm katmanları sırayla ekrana çizer
         this.layers.forEach(layer => layer.draw(context));
     }
 }
