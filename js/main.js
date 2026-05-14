@@ -72,6 +72,7 @@ window.addEventListener('load', function() {
 
             // 2. UI & PAUSE TOGGLES
             if (this.input.keys.includes('Info')) {
+                this.gameState = 'pausing'
                 this.showInfo = !this.showInfo;
                 this.input.keys = this.input.keys.filter(k => k !== 'Info');
             }
