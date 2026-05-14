@@ -30,16 +30,17 @@ export class Enemy {
         }
     }
 
-    shoot() {
-        // Enemies fire from the left side (front) of their sprite
-        const spawnX = this.x; 
+       shoot() {
+        // Make sure 'enemyProjectileSprite' exists in your index.html!
+        const img = document.getElementById('enemyProjectileSprite') || document.getElementById('playerProjectileSprite');
+        
+        const spawnX = this.x;
         const spawnY = this.y + this.height / 2;
-        const img = document.getElementById('enemyProjectileSprite'); 
 
-        // Make sure to push to enemyProjectiles using the EnemyProjectile class
-        if (this.x > 0 && this.x < this.game.width) {
-            this.game.enemyProjectiles.push(new EnemyProjectile(this.game, spawnX, spawnY, img));
-        }
+        // Push to the new modular EntityManager location
+        this.game.entities.enemyProjectiles.push(
+            new EnemyProjectile(this.game, spawnX, spawnY, img)
+        );
     }
     
     draw(context) {

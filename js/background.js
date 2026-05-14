@@ -18,7 +18,7 @@ class Layer {
 
     update() {
         // If you want to use the gameState instead of the isPaused flag:
-        if (this.game.gameState === 'playing') {
+        if (this.game.gameState === 'playing' && this.game.showinfocondition === false) {
             if (this.x <= -this.width) this.x = 0;
             this.x -= this.game.speed * this.speedModifier;
         }
